@@ -1,0 +1,252 @@
+<!Doctype html>
+<html lang="ko">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+
+    <!-- 구글폰트 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+
+
+    <title>설문조사 테스트</title>
+
+    <!-- style -->
+    <style type="text/css">
+        * {
+            font-family: 'Nanum Gothic', sans-serif;
+        }
+
+        .wrap {
+            width: 900px;
+            margin: auto;
+        }
+
+        #btn-save-question {
+            display: block;
+            margin: auto;
+        }
+    </style>
+    <script>
+        // 문항 추가하면 아래 radio_count, dropdown_count는 초기화
+        let radio_count = 0;
+        let dropdown_count = 0;
+
+        let input_question_num = 0;
+        let input_question = "";
+        let input_type = "";
+        let input_list = [];
+
+        $(document).ready(function () {
+            load_data();
+        });
+
+        function type_select(type) {
+            input_type = type;
+            if (type == "radio") {
+                $("#radio-paragraph").show();
+                $("#dropdown-paragraph").hide();
+            } else if (type == "word") {
+                $("#radio-paragraph").hide();
+                $("#dropdown-paragraph").hide();
+            } else if (type == "dropdown") {
+                $("#radio-paragraph").hide();
+                $("#dropdown-paragraph").show();
+            }
+        }
+
+        function add_radio_list() {
+            if (radio_count <= 5) {
+                let input = $("#exampleRadioBtnInput").val();
+                if (input == "") {
+                    alert("보기를 입력해주세요.");
+                } else {
+                    radio_count += 1
+                    $("#radio-list-" + radio_count.toString()).text(input);
+                    $("#radio-list-" + radio_count.toString()).show();
+                    input_list.push(input);
+                    $("#exampleRadioBtnInput").val("");
+                }
+            } else {
+                radio_count = 5
+            }
+        }
+
+        function add_dropdown_list() {
+            if (dropdown_count <= 5) {
+                let input = $("#exampleDropdownBtnInput").val();
+                if (input == "") {
+                    alert("보기를 입력해주세요.");
+                } else {
+                    dropdown_count += 1
+                    $("#dropdown-list-" + dropdown_count.toString()).text(input);
+                    $("#dropdown-list-" + dropdown_count.toString()).show();
+                    input_list.push(input);
+                    $("#exampleDropdownBtnInput").val("");
+                }
+            } else {
+                dropdown_count = 5
+            }
+        }
+
+        function save_data() {
+            input_question_num = $("#question-number").val();
+            input_question = $("#question-title").val();
+
+            $.ajax({
+                type: "POST",
+                url: "/register",
+                data: {
+                    number_give: input_question_num,
+                    question_give: input_question,
+                    type_give: input_type,
+                    list_give: input_list.toString()
+                },
+                success: function (response) { // 성공하면
+                    alert(response["msg"]);
+                    if (response["msg"] == "문항이 저장되었습니다.") {
+                        window.location.reload();
+                    }
+                }
+            })
+        }
+
+        function load_data() {
+            $.ajax({
+                type: "GET",
+                url: "/register",
+                data: {},
+                success: function (response) {
+                    let questions = response['all_questions'];
+                    for (let i = 0; i < questions.length; i++) {
+                        let number = questions[i]['number'];
+                        let question = questions[i]['question'];
+                        let type = questions[i]['type'];
+                        let list = questions[i]['list'];
+
+                        let tmp_html = `<tr>
+                                            <th scope="row">${number}</th>
+                                            <td>${question}</td>
+                                            <td>${type}</td>
+                                            <td>${list}</td>
+                                        </tr>`;
+                        $('#db-table-body').append(tmp_html);
+                    }
+                }
+            })
+        }
+    </script>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="jumbotron">
+        <h1 class="display-4">설문조사 참여</h1>
+        <p class="lead">설문조사 참여 기능 테스트입니다.</p>
+        <hr class="my-4">
+    </div>
+    <table class="table" id="db-table">
+        <thead>
+        <tr>
+            <th scope="col">No.</th>
+            <th scope="col">질문</th>
+            <th scope="col">유형</th>
+            <th scope="col">선택지</th>
+        </tr>
+        </thead>
+        <tbody id="db-table-body">
+        </tbody>
+    </table>
+    <form>
+        <div class="form-group">
+            <label for="question-number">문항 번호</label>
+            <input type="text" class="form-control" id="question-number" placeholder="1">
+        </div>
+
+        <div class="form-group">
+            <label for="question-title">질문</label>
+            <input type="text" class="form-control" id="question-title" placeholder="가장 좋아하는 음식은 무엇인가요?">
+        </div>
+
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <button class="btn btn-outline-secondary" type="button" id="btn-select-radio"
+                        onclick="type_select(`radio`)">객관식
+                </button>
+                <button class="btn btn-outline-secondary" type="button" id="btn-select-word"
+                        onclick="type_select(`word`)">주관식
+                </button>
+                <button class="btn btn-outline-secondary" type="button" id="btn-select-dropdown"
+                        onclick="type_select(`dropdown`)">드롭다운
+                </button>
+            </div>
+            <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
+        </div>
+
+        <div id="radio-paragraph" style="display:none">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="보기를 입력해주세요." id="exampleRadioBtnInput"
+                       aria-label="Recipient's username"
+                       aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" onclick="add_radio_list()">추가</button>
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <button class="btn btn-outline-secondary" type="button" id="radio-list-1" style="display:none">1
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" id="radio-list-2" style="display:none">2
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" id="radio-list-3" style="display:none">3
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" id="radio-list-4" style="display:none">4
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" id="radio-list-5" style="display:none">5
+                    </button>
+                </div>
+                <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
+            </div>
+        </div>
+
+        <div id="dropdown-paragraph" style="display:none">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="보기를 입력해주세요." id="exampleDropdownBtnInput"
+                       aria-label="Recipient's username"
+                       aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" onclick="add_dropdown_list()">추가</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">미리보기</label>
+                <select class="form-control" id="exampleFormControlSelect1">
+                    <option id="dropdown-list-0">보기를 선택해주세요.</option>
+                    <option id="dropdown-list-1" style="display:none">1</option>
+                    <option id="dropdown-list-2" style="display:none">2</option>
+                    <option id="dropdown-list-3" style="display:none">3</option>
+                    <option id="dropdown-list-4" style="display:none">4</option>
+                    <option id="dropdown-list-5" style="display:none">5</option>
+                </select>
+            </div>
+        </div>
+    </form>
+    <button type="button" class="btn btn-primary" id="btn-save-question" onclick="save_data()">문항 저장
+    </button>
+</div>
+</body>
+
+</html>

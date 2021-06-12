@@ -1,0 +1,173 @@
+<!Doctype html>
+<html lang="ko">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+
+    <!-- 구글폰트 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+
+
+    <title>설문조사 테스트</title>
+
+    <!-- style -->
+    <style type="text/css">
+        * {
+            font-family: 'Nanum Gothic', sans-serif;
+        }
+
+        .wrap {
+            width: 900px;
+            margin: auto;
+        }
+
+        #btn-save-question {
+            display: block;
+            margin: auto;
+        }
+    </style>
+    <script>
+        // 문항 추가하면 아래 radio_count, dropdown_count는 초기화
+        let radio_count = 0;
+        let dropdown_count = 0;
+
+        let input_question_num = 0;
+        let input_question = "";
+        let input_type = "";
+        let input_list = [];
+
+        $(document).ready(function () {
+            load_result();
+        });
+
+        function type_select(type) {
+            input_type = type;
+            if (type == "radio") {
+                $("#radio-paragraph").show();
+                $("#dropdown-paragraph").hide();
+            } else if (type == "word") {
+                $("#radio-paragraph").hide();
+                $("#dropdown-paragraph").hide();
+            } else if (type == "dropdown") {
+                $("#radio-paragraph").hide();
+                $("#dropdown-paragraph").show();
+            }
+        }
+
+        function add_radio_list() {
+            if (radio_count <= 5) {
+                let input = $("#exampleRadioBtnInput").val();
+                if (input == "") {
+                    alert("보기를 입력해주세요.");
+                } else {
+                    radio_count += 1
+                    $("#radio-list-" + radio_count.toString()).text(input);
+                    $("#radio-list-" + radio_count.toString()).show();
+                    input_list.push(input);
+                    $("#exampleRadioBtnInput").val("");
+                }
+            } else {
+                radio_count = 5
+            }
+        }
+
+        function add_dropdown_list() {
+            if (dropdown_count <= 5) {
+                let input = $("#exampleDropdownBtnInput").val();
+                if (input == "") {
+                    alert("보기를 입력해주세요.");
+                } else {
+                    dropdown_count += 1
+                    $("#dropdown-list-" + dropdown_count.toString()).text(input);
+                    $("#dropdown-list-" + dropdown_count.toString()).show();
+                    input_list.push(input);
+                    $("#exampleDropdownBtnInput").val("");
+                }
+            } else {
+                dropdown_count = 5
+            }
+        }
+
+        function save_data() {
+            input_question_num = $("#question-number").val();
+            input_question = $("#question-title").val();
+
+            $.ajax({
+                type: "POST",
+                url: "/register",
+                data: {
+                    number_give: input_question_num,
+                    question_give: input_question,
+                    type_give: input_type,
+                    list_give: input_list.toString()
+                },
+                success: function (response) { // 성공하면
+                    alert(response["msg"]);
+                    if (response["msg"] == "문항이 저장되었습니다.") {
+                        window.location.reload();
+                    }
+                }
+            })
+        }
+
+        function load_result() {
+            $.ajax({
+                type: "GET",
+                url: "/result/load",
+                data: {},
+                success: function (response) {
+                    let answers = response['all_answers'];
+                    for (let i = 0; i < answers.length; i++) {
+                        let number = answers[i]['number'];
+                        let question = answers[i]['question'];
+                        let answer = answers[i]['answer'];
+
+                        let tmp_html = `<tr>
+                                            <th scope="row">${number}</th>
+                                            <td>${question}</td>
+                                            <td>${answer}</td>
+                                        </tr>`;
+                        $('#db-table-body').append(tmp_html);
+                    }
+                }
+            })
+        }
+    </script>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="jumbotron">
+        <h1 class="display-4">설문조사 결과</h1>
+        <p class="lead">설문조사 결과 테스트입니다.</p>
+        <hr class="my-4">
+    </div>
+    <table class="table" id="db-table">
+        <thead>
+        <tr>
+            <th scope="col">No.</th>
+            <th scope="col">질문</th>
+            <th scope="col">응답</th>
+        </tr>
+        </thead>
+        <tbody id="db-table-body">
+        </tbody>
+    </table>
+</div>
+</body>
+
+</html>

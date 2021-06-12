@@ -1,0 +1,179 @@
+<!Doctype html>
+<html lang="ko">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+
+    <!-- 구글폰트 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+
+
+    <title>설문조사 테스트</title>
+
+    <!-- style -->
+    <style type="text/css">
+        * {
+            font-family: 'Nanum Gothic', sans-serif;
+        }
+
+        .wrap {
+            width: 900px;
+            margin: auto;
+        }
+
+        .btn-primary {
+            width: 100px;
+            display: block;
+            margin: auto;
+        }
+
+        #question-number-font {
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        let answer = "";
+        let question_title = "";
+
+        $(document).ready(function () {
+            load_question();
+        });
+
+        function set_answer(a_val) {
+            answer = a_val;
+        }
+
+        function set_question(a_val) {
+            question_title = a_val;
+            console.log(question_title);
+        }
+
+        function save_answer(tp, id) {
+            set_question($('#question-title' + id.toString()).text());
+
+            if (tp == "word") {
+                set_answer($('#answer-word' + id.toString() + '-input').val());
+            } else if (tp == "dropdown") {
+                set_answer($('#answer-dropdown-options' + id.toString()).val());
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/participate/save",
+                data: {
+                    number_give: id + 1,
+                    question_give: question_title,
+                    answer_give: answer
+                },
+                success: function (response) { // 성공하면
+                    if (response["msg"] == "답변이 저장되었습니다.") {
+                        $("#question-card" + id.toString()).hide();
+                    }
+                }
+            })
+        }
+
+        function load_question() {
+            $.ajax({
+                    type: "GET",
+                    url: "/participate/load",
+                    data: {},
+                    success: function (response) {
+                        let questions = response['all_questions'];
+                        for (let i = 0; i < questions.length; i++) {
+                            let number = questions[i]['number'].toString() + "번 문항";
+                            let question = questions[i]['question'];
+                            let type = questions[i]['type'];
+                            let list = questions[i]['list'];
+
+                            let tmp_type = "";
+
+                            if (type == "radio") {
+                                tmp_type = "객관식";
+                            } else if (type == "word") {
+                                tmp_type = "주관식";
+                            } else if (type == "dropdown") {
+                                tmp_type = "드롭다운";
+                            }
+
+                            let tmp_html = `<div class="card" id="question-card${i}">
+                                            <div class="card-header" id="question-number-font">
+                                                ${number}
+                                            </div>
+                                            <div class="card-body">
+                                                <h5 class="card-title" id="question-title${i}">${question}</h5>
+                                                <span class="badge badge-warning">${tmp_type}</span>
+                                                <p class="card-text" id="answer-field${(i).toString()}"></p>
+                                                <button type="button" class="btn btn-primary" onclick="save_answer('${type}', ${i})">응답하기</button>
+                                            </div>
+                                        </div>`;
+                            $('#question-cards').append(tmp_html);
+
+                            if (type == "radio") {
+                                for (let j = 0; j < list.length; j++) {
+                                    let name = "exampleRadios" + i.toString();
+                                    let id = name + "-" + j.toString();
+                                    tmp_html = `<div class="form-check">
+                                            <input class="form-check-input" type="radio" name=${name} id=${id}
+                                                   value="" onclick="set_answer('${list[j]}')">
+                                            <label class="form-check-label" for=${id}>
+                                                ${list[j]}
+                                            </label>
+                                        </div>`;
+                                    $('#answer-field' + i.toString()).append(tmp_html);
+                                }
+                            } else if (type == "word") {
+                                tmp_html = `<div id="answer-word${i}">
+                                                <input className="form-control" type="text" placeholder="답변을 입력해주세요." id="answer-word${i}-input">
+                                            </div>`;
+                                $('#answer-field' + i.toString()).append(tmp_html);
+                            } else {
+                                tmp_html = `<div id="answer-dropdown">
+                                                <select class="form-control" id="answer-dropdown-options${i}">
+                                                    <option>답변을 선택해주세요.</option>
+                                                </select>
+                                            </div>`;
+                                $('#answer-field' + i.toString()).append(tmp_html);
+
+                                for (let j = 0; j < list.length; j++) {
+                                    tmp_html = `<option>${list[j]}</option>`;
+                                    $('#answer-dropdown-options' + i.toString()).append(tmp_html);
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }
+    </script>
+
+</head>
+
+<body>
+<div class="wrap">
+    <div class="jumbotron">
+        <h1 class="display-4">설문조사 테스트</h1>
+        <p class="lead">설문조사 테스트입니다.</p>
+        <hr class="my-4">
+    </div>
+    <div id="question-cards">
+    </div>
+    <a class="btn btn-primary" href="../result" role="button">결과보기</a>
+</div>
+</body>
+
+</html>
