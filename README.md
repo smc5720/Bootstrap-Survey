@@ -52,5 +52,7 @@
 ### 📎 첨부자료
 
 ---
-
-![캡처](https://user-images.githubusercontent.com/23237567/134330246-51b5bf19-3cb5-47c5-8342-961e59924b9d.JPG)
+![설문조사 참여(객관식)](https://user-images.githubusercontent.com/23237567/134333652-d55771c7-b68a-47b2-8a9c-5c9cc38539a5.PNG)
+![설문조사 참여(드롭다운)](https://user-images.githubusercontent.com/23237567/134333682-f3b3af6a-535e-46c8-837f-cb6b85a19780.PNG)
+![설문조사 테스트](https://user-images.githubusercontent.com/23237567/134333694-4cd2537d-0c0e-47ba-83aa-720d41325c3b.PNG)
+![설문조사 결과](https://user-images.githubusercontent.com/23237567/134333723-727aa215-56bf-4d7f-bbac-d8b78b1ba691.PNG)
